@@ -230,16 +230,8 @@ CREATE TABLE assays
                 covalent_fragment = cols["Covalent Fragment"]
                 covalent_warhead = cols["covalent_warhead"]
 
-                # Apply regular expression
-                # Lots of ways of extracting what we need of course
-                match = sub_pattern.match(sub_id)
-
-
                 # The value we store here is the value we know we need for the SQL statement below
                 unique_assays[sub_id] = (sub_id, r_avg_IC50, f_avg_IC50, covalent_fragment, covalent_warhead)
-                else:
-                    # Warn if expected pattern doesn't match
-                    print(f'Warning f{sub_id} doesn\'t conform to pattern')
 
             # Execute SQL statement to insert all unique submissions
             conn.executemany('INSERT INTO assays (compound_id, r_avg_IC50, f_avg_IC50, covalent_fragment, covalent_warhead) VALUES(?,?,?,?,?)', unique_assays.values())
@@ -261,14 +253,14 @@ CREATE TABLE assays
                 assays b
             WHERE
                 a.compound_id=b.compound_id AND
-                (b.r_avg_IC50 IS NOT NULL OR
-                b.f_avg_IC50 IS NOT NULL)
+                b.r_avg_IC50 <> '' AND
+                b.f_avg_IC50 <> ''
             LIMIT {n}
         ''')
         # Print out results
         for row in data:
-            print(f'Compound ID => {row[0]}, Mass Spec IC50 => {row[2]:.4f}uM, '
-                  f'Fluorescence IC50 => {row[3]:.4f}uM, SMILES => {row[1]}')
+            print(f"Compound ID => {row[0]}, Mass Spec IC50 => {row[2]:.4f}uM, "
+                  f"Fluorescence IC50 => {row[3]:.4f}uM, SMILES => {row[1]}")
 
 
 if __name__ == '__main__':
@@ -277,6 +269,6 @@ if __name__ == '__main__':
     manager = DatabaseManager(database_path='sabs_rdbms.db')
     manager.drop_all()
     manager.create()
-    manager.populate_submissions_table(all_data_file=all_data_file)
+    manager.populate_compounds_table(all_data_file=all_data_file)
     manager.populate_assays_table(all_data_file=all_data_file)
     manager.select_compounds(10)
