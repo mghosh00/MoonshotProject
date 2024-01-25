@@ -1,0 +1,9 @@
+matplotlib
+numpy
+pandas
+rdkit
+scikit-learn
+seaborn
+ES_ML_SOSSO
+jupyter
+notebook

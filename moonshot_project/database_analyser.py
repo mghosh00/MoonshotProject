@@ -88,7 +88,7 @@ CREATE TABLE assays
     r_avg_IC50 DECIMAL,
     covalent_fragment boolean,
     covalent_warhead boolean,
-    FOREIGN KEY(compound_id) REFERENCES compound_id(compound_id)
+    FOREIGN KEY(compound_id) REFERENCES compounds(compound_id)
 )
         ''')
 
@@ -234,24 +234,12 @@ CREATE TABLE assays
                 # Lots of ways of extracting what we need of course
                 match = sub_pattern.match(sub_id)
 
-                if match:
-                    # Get submitter three letter code
-                    name_code = match.group(1)
-                    # Get institute three letter code
-                    institute_code = match.group(2)
-                    # Get random component of submission ID
-                    random_id = match.group(3)
 
-                    # Generate unique key, which is just the submission id
-                    key = f'{name_code}-{institute_code}-{random_id}'
-
-                    # The value we store here is the value we know we need for the SQL statement below
-                    unique_assays[key] = (key, r_avg_IC50, f_avg_IC50, covalent_fragment, covalent_warhead)
+                # The value we store here is the value we know we need for the SQL statement below
+                unique_assays[sub_id] = (sub_id, r_avg_IC50, f_avg_IC50, covalent_fragment, covalent_warhead)
                 else:
                     # Warn if expected pattern doesn't match
                     print(f'Warning f{sub_id} doesn\'t conform to pattern')
-
-            print(unique_assays)
 
             # Execute SQL statement to insert all unique submissions
             conn.executemany('INSERT INTO assays (compound_id, r_avg_IC50, f_avg_IC50, covalent_fragment, covalent_warhead) VALUES(?,?,?,?,?)', unique_assays.values())
@@ -264,20 +252,19 @@ CREATE TABLE assays
         # Execute SQL
         data = conn.execute(f'''
             SELECT
-                compounds.compound_id,
-                compounds.smiles,
-                assays.r_avg_IC50,
-                assays.f_avg_IC50
+                a.compound_id,
+                a.smiles,
+                b.r_avg_IC50,
+                b.f_avg_IC50
             FROM
-                compounds
-            INNER JOIN 
-                assays ON compounds.compound_id=assays.compound_id
+                compounds a,
+                assays b
             WHERE
-                r_avg_IC50 IS NOT NULL,
-                f_avg_IC50 IS NOT NULL
+                a.compound_id=b.compound_id AND
+                (b.r_avg_IC50 IS NOT NULL OR
+                b.f_avg_IC50 IS NOT NULL)
             LIMIT {n}
         ''')
-
         # Print out results
         for row in data:
             print(f'Compound ID => {row[0]}, Mass Spec IC50 => {row[2]:.4f}uM, '
