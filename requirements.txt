@@ -7,3 +7,4 @@ seaborn
 ES_ML_SOSSO
 jupyter
 notebook
+plotnine
