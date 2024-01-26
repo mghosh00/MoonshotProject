@@ -37,7 +37,8 @@ class Cluster:
                 for molecule in self.smiles_dict.keys()]
 
     def _all_distances_between_centroids(self, centroids: list):
-        distance_rows = [self._distance_between_rows(centroid) for centroid in centroids]
+        distance_rows = [self._distance_between_rows(centroid)
+                         for centroid in centroids]
         distance_frame = pd.DataFrame(distance_rows,
                                       columns=list(self.smiles_dict.keys()))
         return distance_frame.transpose()
@@ -45,11 +46,14 @@ class Cluster:
     def _assign_points_to_clusters(self, centroids: list):
         distance_frame = self._all_distances_between_centroids(centroids)
         cluster_ids = {}
-        for index, datapoint in distance_frame.iterrows():
+        for molecule, datapoint in distance_frame.iterrows():
+            if molecule in centroids:
+                cluster_ids[molecule] = centroids.index(molecule)
+                continue
             minimum = min(datapoint)
             for j in range(distance_frame.shape[1]):
                 if minimum == datapoint[j]:
-                    cluster_ids[index] = j
+                    cluster_ids[molecule] = j
                     break
         return cluster_ids
 
@@ -81,7 +85,7 @@ class Cluster:
 
     def fit_model(self):
         starting_centroids = self._sample_centroids(self.num_clusters)
-        for i in range(100):
+        for i in range(1000):
             cluster_ids = self._assign_points_to_clusters(starting_centroids)
             new_centroids = self._all_new_centroids(cluster_ids, starting_centroids)
             starting_centroids = new_centroids

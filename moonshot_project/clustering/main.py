@@ -1,5 +1,5 @@
 from pathlib import Path
-from plotnine import ggplot, geom_point, aes
+from plotnine import ggplot, geom_point, aes, geom_smooth
 import pandas as pd
 import math
 
@@ -15,8 +15,9 @@ def minus_log_10(assay_value: float):
 
 def scatter_plot(df: pd.DataFrame, n_values: int, n_clusters: int):
     plot = (
-            ggplot(df, aes(x="r_avg_pIC50", y="f_avg_pIC50", color="Cluster"))
-            + geom_point()
+            ggplot(df, aes(x="r_avg_pIC50", y="f_avg_pIC50"))
+            + geom_point(aes(color="Cluster"))
+            + geom_smooth(method="lm", se=False)
     )
     plot.save(f"cluster_plots/clusters_{n_values}_{n_clusters}.png")
 
@@ -53,7 +54,7 @@ if __name__ == '__main__':
 
     # Create an instance of Cluster and perform clustering
     cluster = Cluster(smiles_dict, distance_file="tanimoto.csv",
-                      num_clusters=100)
+                      num_clusters=10)
     cluster_ids, smiles_clusters = cluster.fit_model()
     print(smiles_clusters)
 
@@ -61,4 +62,4 @@ if __name__ == '__main__':
     # corresponds to assay
     compound_df = create_data_frame(compound_data, cluster_ids)
 
-    scatter_plot(compound_df, 2000, 100)
+    scatter_plot(compound_df, 2000, 10)
