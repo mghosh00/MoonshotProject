@@ -83,9 +83,9 @@ class Cluster:
         new_centroids = [self._new_centroid(cluster) for cluster in current_clusters]
         return new_centroids
 
-    def fit_model(self):
+    def make_clusters(self, num_iterations: int):
         starting_centroids = self._sample_centroids(self.num_clusters)
-        for i in range(1000):
+        for i in range(num_iterations):
             cluster_ids = self._assign_points_to_clusters(starting_centroids)
             new_centroids = self._all_new_centroids(cluster_ids, starting_centroids)
             starting_centroids = new_centroids

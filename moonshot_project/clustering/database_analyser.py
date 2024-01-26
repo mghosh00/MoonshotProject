@@ -236,6 +236,10 @@ CREATE TABLE assays
             # Execute SQL statement to insert all unique submissions
             conn.executemany('INSERT INTO assays (compound_id, r_avg_IC50, f_avg_IC50, covalent_fragment, covalent_warhead) VALUES(?,?,?,?,?)', unique_assays.values())
 
+    def populate_all_tables(self, file: Path):
+        self.populate_compounds_table(file)
+        self.populate_assays_table(file)
+
     def select_compounds(self, n: int):
         """Select the SMILES string and assay data for a certain number of compounds
         """
@@ -254,7 +258,9 @@ CREATE TABLE assays
             WHERE
                 a.compound_id=b.compound_id AND
                 b.r_avg_IC50 <> '' AND
-                b.f_avg_IC50 <> ''
+                b.r_avg_IC50 < 99 AND
+                b.f_avg_IC50 <> '' AND
+                b.f_avg_IC50 < 99
             LIMIT {n}
         ''')
         output_dict = {}
@@ -267,11 +273,10 @@ CREATE TABLE assays
 
 
 if __name__ == '__main__':
-    all_data_file = Path('covid_submissions_all_info.csv')
+    file = Path('covid_submissions_all_info.csv')
 
-    manager = DatabaseManager(database_path='sabs_rdbms.db')
+    manager = DatabaseManager(database_path='moonshot.db')
     manager.drop_all()
     manager.create()
-    manager.populate_compounds_table(all_data_file=all_data_file)
-    manager.populate_assays_table(all_data_file=all_data_file)
+    manager.populate_all_tables(file)
     manager.select_compounds(10)

@@ -3,6 +3,7 @@ from rdkit.Chem import DataStructs
 
 from moonshot_project import Molecule
 
+
 class DistanceCalculator:
     """Calculates Tanimoto distance matrix given a dict of SMILES strings
     keyed by compound_id
