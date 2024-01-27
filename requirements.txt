@@ -8,3 +8,5 @@ ES_ML_SOSSO
 jupyter
 notebook
 plotnine
+plotnine-prism
+rise
